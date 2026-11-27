@@ -10,7 +10,7 @@ CANCEL_BOOKING_WORDS = {"取消預約", "我要取消預約"}
 HELP_TEXT = (
     "您好，這裡是餐廳訂位小幫手。\n"
     "輸入「預約」開始訂位；輸入「查詢預約」查看訂位；輸入「取消預約」取消訂位。\n"
-    "營業時間：11:30–14:30、17:00–20:00。每組用餐 60 分鐘，預約時段每小時一班。"
+    "營業時間：11:30–14:30、17:00–20:00。每組用餐 60 分鐘，每小時一個時段；結束營業前最後一小時不接受新訂位。"
 )
 
 
@@ -61,7 +61,7 @@ def process_reservation_message(store, user_id, message):
 
     step = state.get("step")
     if step == "cancel_booking":
-        if not re.fullmatch(r"[0-9]+", text):
+        if len(text) > 10 or not re.fullmatch(r"[0-9]+", text):
             return "請輸入上方預約清單中的數字編號，或輸入「取消」結束操作。"
         if store.cancel_user_reservation(int(text), user_id):
             store.clear_state(user_id)
@@ -69,7 +69,7 @@ def process_reservation_message(store, user_id, message):
         return "找不到這筆有效預約，請重新輸入清單中的編號，或輸入「取消」結束操作。"
 
     if step == "party_size":
-        if not re.fullmatch(r"[0-9]+", text) or not 1 <= int(text) <= 36:
+        if len(text) > 2 or not re.fullmatch(r"[0-9]+", text) or not 1 <= int(text) <= 36:
             return "人數請輸入 1 到 36 的整數；超過 36 位請聯絡店家安排。"
         party_size = int(text)
         store.set_state(user_id, {"step": "date", "party_size": party_size})
@@ -80,7 +80,7 @@ def process_reservation_message(store, user_id, message):
         if not reservation_date:
             return "日期格式或範圍不正確。請輸入未過期、90 天內的日期，例如 2026/12/01。"
         party_size = state["party_size"]
-        slots = store.get_slots(reservation_date, party_size)
+        slots = store.available_slots(reservation_date, party_size, user_id)
         if not slots:
             return "當日沒有適合的人數與可用桌位，請改選其他日期。"
         store.set_state(
@@ -95,10 +95,10 @@ def process_reservation_message(store, user_id, message):
         if reservation_date is None:
             store.clear_state(user_id)
             return "這筆預約流程已過期，請輸入「預約」重新開始。"
-        slots = store.get_slots(reservation_date, state["party_size"])
+        slots = store.available_slots(reservation_date, state["party_size"], user_id)
         if not reservation_time or reservation_time not in slots:
             available_text = "、".join(slots) if slots else "目前已無可預約時段"
-            return f"這個時段不在營業時間、已過時間或桌位不足。可選時段：{available_text}。"
+            return f"這個時段不開放、已過時間、桌位不足或你已有同時段預約。營業結束前最後一小時不接受訂位。可選時段：{available_text}。"
         store.set_state(
             user_id,
             {
@@ -126,7 +126,7 @@ def process_reservation_message(store, user_id, message):
         )
         if not reservation:
             store.clear_state(user_id)
-            return "抱歉，該時段剛被訂滿。請重新輸入「預約」選擇其他時段。"
+            return "抱歉，該時段桌位已滿、已過可訂時間，或你已有同時段預約。請重新輸入「預約」選擇其他時段。"
         store.clear_state(user_id)
         return (
             f"✅ 預約完成！\n"

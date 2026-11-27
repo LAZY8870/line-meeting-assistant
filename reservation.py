@@ -7,6 +7,7 @@ from itertools import combinations
 
 RESERVATION_MINUTES = 60
 SLOT_INTERVAL_MINUTES = 60
+FINAL_HOUR_BUFFER_MINUTES = 60
 MAX_ADVANCE_DAYS = 90
 SLOT_WINDOWS = (("11:30", "14:30"), ("17:00", "20:00"))
 TABLES = {
@@ -98,16 +99,34 @@ class ReservationStore:
         return hour * 60 + minute
 
     def get_slots(self, reservation_date, party_size):
-        if not 1 <= party_size <= sum(TABLES.values()):
+        return self.available_slots(reservation_date, party_size)
+
+    def available_slots(self, reservation_date, party_size, user_id=None):
+        if reservation_date is None or not 1 <= party_size <= sum(TABLES.values()):
             return []
+        existing_times = set()
+        if user_id:
+            with closing(self.connect()) as connection:
+                rows = connection.execute(
+                    """
+                    SELECT reservation_time FROM reservations
+                    WHERE line_user_id = ? AND reservation_date = ? AND status = 'confirmed'
+                    """,
+                    (user_id, reservation_date.isoformat()),
+                ).fetchall()
+            existing_times = {row["reservation_time"] for row in rows}
+
         slots = []
         for start_text, end_text in SLOT_WINDOWS:
             start = self._minutes(start_text)
             end = self._minutes(end_text)
-            while start + RESERVATION_MINUTES <= end:
+            last_hour_starts = end - FINAL_HOUR_BUFFER_MINUTES
+            while start + RESERVATION_MINUTES <= end and start < last_hour_starts:
                 time_text = f"{start // 60:02d}:{start % 60:02d}"
-                if self._is_future(reservation_date, time_text) and self.available_tables(
-                    reservation_date, time_text, party_size
+                if (
+                    time_text not in existing_times
+                    and self._is_future(reservation_date, time_text)
+                    and self.available_tables(reservation_date, time_text, party_size)
                 ):
                     slots.append(time_text)
                 start += SLOT_INTERVAL_MINUTES
@@ -118,7 +137,8 @@ class ReservationStore:
         for window_start, window_end in SLOT_WINDOWS:
             start = cls._minutes(window_start)
             end = cls._minutes(window_end)
-            while start + RESERVATION_MINUTES <= end:
+            last_hour_starts = end - FINAL_HOUR_BUFFER_MINUTES
+            while start + RESERVATION_MINUTES <= end and start < last_hour_starts:
                 if reservation_time == f"{start // 60:02d}:{start % 60:02d}":
                     return True
                 start += SLOT_INTERVAL_MINUTES
@@ -173,7 +193,11 @@ class ReservationStore:
 
     def create_reservation(self, user_id, guest_name, party_size, reservation_date, reservation_time):
         if (
-            reservation_date is None
+            not user_id
+            or not guest_name
+            or len(guest_name) > 40
+            or not 1 <= party_size <= sum(TABLES.values())
+            or reservation_date is None
             or not self.is_opening_slot(reservation_time)
             or not self._is_future(reservation_date, reservation_time)
         ):
@@ -181,6 +205,17 @@ class ReservationStore:
         connection = self.connect()
         try:
             connection.execute("BEGIN IMMEDIATE")
+            duplicate = connection.execute(
+                """
+                SELECT 1 FROM reservations
+                WHERE line_user_id = ? AND reservation_date = ? AND reservation_time = ?
+                    AND status = 'confirmed'
+                """,
+                (user_id, reservation_date.isoformat(), reservation_time),
+            ).fetchone()
+            if duplicate:
+                connection.rollback()
+                return None
             tables = self._available_tables(connection, reservation_date, reservation_time, party_size)
             if not tables:
                 connection.rollback()
@@ -319,11 +354,4 @@ def normalize_reservation_time(text):
     if hour > 23 or minute > 59:
         return None
     time_text = f"{hour:02d}:{minute:02d}"
-    for window_start, window_end in SLOT_WINDOWS:
-        start = ReservationStore._minutes(window_start)
-        end = ReservationStore._minutes(window_end)
-        while start + RESERVATION_MINUTES <= end:
-            if time_text == f"{start // 60:02d}:{start % 60:02d}":
-                return time_text
-            start += SLOT_INTERVAL_MINUTES
-    return None
+    return time_text if ReservationStore.is_opening_slot(time_text) else None
