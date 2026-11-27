@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>訂位管理｜好好食</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/reservation.css') }}">
+</head>
+<body class="admin-body">
+    <main class="admin-shell">
+        <header class="admin-topbar">
+            <a class="wordmark" href="/">好好食 <span>管理</span></a>
+            <form action="/admin/logout" method="post">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                <button class="logout-button" type="submit">登出</button>
+            </form>
+        </header>
+        <section class="admin-heading">
+            <div><p class="overline">RESERVATION OVERVIEW</p><h1>訂位總覽</h1><p>依月份查看每天的訂位數與預約人數。</p></div>
+            <div class="month-picker">
+                <button id="previousMonth" type="button" aria-label="上個月">←</button>
+                <input id="monthPicker" type="month" aria-label="選擇月份">
+                <button id="nextMonth" type="button" aria-label="下個月">→</button>
+            </div>
+        </section>
+        <section class="stat-grid" aria-live="polite">
+            <article class="stat-card"><span>本月有效訂位</span><strong id="monthlyReservations">—</strong><small>筆預約</small></article>
+            <article class="stat-card"><span>本月預約來客</span><strong id="monthlyGuests">—</strong><small>位客人</small></article>
+            <article class="stat-card"><span>營業桌位</span><strong>12</strong><small>6 張雙人桌・6 張四人桌</small></article>
+        </section>
+        <section class="dashboard-grid">
+            <div class="calendar-card">
+                <div class="calendar-header"><h2 id="calendarTitle">—</h2><span>點日期查看訂位</span></div>
+                <div class="calendar-grid weekday-row" aria-hidden="true">
+                    <span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span><span>日</span>
+                </div>
+                <div id="calendarGrid" class="calendar-grid"></div>
+                <div id="loadError" class="form-error hidden" role="alert"></div>
+            </div>
+            <aside class="day-card">
+                <div class="day-heading"><div><p class="overline">DAILY BOOKINGS</p><h2 id="selectedDateTitle">選擇日期</h2></div><span id="selectedGuestTotal" class="guest-pill">— 位</span></div>
+                <div id="reservationDetails" class="reservation-details"><p class="empty-state">點選月曆日期查看當日訂位。</p></div>
+            </aside>
+        </section>
+        <footer class="admin-footer"><span>好好食訂位管理系統</span><a href="/">返回首頁 →</a></footer>
+    </main>
+    <script>window.adminCsrfToken = {{ csrf_token|tojson }};</script>
+    <script src="{{ url_for('static', filename='js/admin.js') }}"></script>
+</body>
+</html>

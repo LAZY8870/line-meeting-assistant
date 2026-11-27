@@ -1,11 +1,15 @@
-from datetime import datetime
-import os
-import base64
-import hashlib
 import hmac
 import json
-from flask import Flask, abort, jsonify, render_template, request
+import os
+import re
+import secrets
+from functools import wraps
+
 from dotenv import load_dotenv
+from flask import Flask, abort, jsonify, redirect, render_template, request, session, url_for
+
+from reservation import ReservationStore
+from reservation_bot import process_reservation_message
 
 load_dotenv(os.path.join(os.path.dirname(__file__), ".env"))
 
@@ -22,114 +26,47 @@ try:
     from linebot.v3.webhooks import MessageEvent, TextMessageContent
 except ImportError:
     WebhookHandler = None
+    Configuration = None
+    MessageEvent = None
+    TextMessageContent = None
 
 app = Flask(__name__)
+app.secret_key = os.getenv("FLASK_SECRET_KEY") or secrets.token_hex(32)
+app.config.update(
+    SESSION_COOKIE_HTTPONLY=True,
+    SESSION_COOKIE_SAMESITE="Lax",
+)
 
-meetings = []
-conversations = {}
+instance_path = app.instance_path
+os.makedirs(instance_path, exist_ok=True)
+database_path = os.getenv("RESERVATION_DATABASE") or os.path.join(instance_path, "reservations.sqlite3")
+reservation_store = ReservationStore(database_path)
+
 channel_secret = os.getenv("LINE_CHANNEL_SECRET")
 channel_access_token = os.getenv("LINE_CHANNEL_ACCESS_TOKEN")
-line_handler = None
-line_configuration = None
-
-if channel_secret and WebhookHandler:
-    line_handler = WebhookHandler(channel_secret)
-    if channel_access_token:
-        line_configuration = Configuration(access_token=channel_access_token)
-
-
-def parse_meeting(text):
-    lowered = text.lower()
-    result = {"name": None, "time": None, "location": None}
-
-    for marker in ("會議名稱", "名稱"):
-        if marker in text:
-            remainder = text.split(marker, 1)[1].lstrip("是為 ：:")
-            result["name"] = remainder.split("，", 1)[0].split(" ", 1)[0].strip("。 ")
-
-    for marker in ("地點", "地點是", "地點：", "地點:", "地點為"):
-        if marker in text:
-            remainder = text.split(marker, 1)[1].lstrip("是為 ：:")
-            result["location"] = remainder.split("，", 1)[0].strip("。 ")
-            break
-
-    for marker in ("時間", "時間是", "時間為", "時間：", "時間:"):
-        if marker in text:
-            remainder = text.split(marker, 1)[1].lstrip("是為 ：:")
-            result["time"] = remainder.split("，", 1)[0].strip("。 ")
-            break
-
-    if not result["time"]:
-        time_words = ["今天", "明天", "後天", "今晚", "上午", "下午", "晚上", "星期", "週"]
-        if any(word in lowered for word in time_words) or any(char.isdigit() for char in text):
-            result["time"] = text.strip("，。 ")
-
-    if not result["location"]:
-        for marker in ("在", "於"):
-            if marker in text:
-                result["location"] = text.split(marker, 1)[1].strip("，。 ")
-                break
-
-    return result
+admin_password = os.getenv("ADMIN_PASSWORD")
+line_handler = WebhookHandler(channel_secret) if channel_secret and WebhookHandler else None
+line_configuration = (
+    Configuration(access_token=channel_access_token)
+    if channel_access_token and Configuration
+    else None
+)
 
 
-def missing_field(draft):
-    for field in ("name", "time", "location"):
-        if not draft.get(field):
-            return field
-    return None
+def admin_required(view):
+    @wraps(view)
+    def wrapped(*args, **kwargs):
+        if not session.get("admin_logged_in"):
+            abort(401)
+        return view(*args, **kwargs)
+
+    return wrapped
 
 
-FIELD_QUESTIONS = {
-    "name": "請問這場會議的名稱是什麼？",
-    "time": "請問會議時間是？（例如：明天下午 2 點）",
-    "location": "請問會議地點是？（例如：會議室 A 或 Teams）",
-}
-
-FIELD_LABELS = {"name": "會議名稱", "time": "時間", "location": "地點"}
-
-
-def process_message(session_id, text):
-    if not text:
-        return {"reply": "請輸入訊息，我才能協助你紀錄會議。"}
-
-    draft = conversations.setdefault(session_id, {"name": None, "time": None, "location": None})
-
-    if text.lower() in ("取消", "清除", "重新開始", "reset"):
-        conversations[session_id] = {"name": None, "time": None, "location": None}
-        return {"reply": "已清除目前的會議資料，我們重新開始吧！", "draft": {"name": None, "time": None, "location": None}}
-
-    missing_before_answer = missing_field(draft)
-    parsed = parse_meeting(text)
-    for field, value in parsed.items():
-        if value:
-            draft[field] = value
-
-    if missing_before_answer and not draft.get(missing_before_answer):
-        field = missing_before_answer
-        time_words = ["今天", "明天", "後天", "今晚", "上午", "下午", "晚上", "星期", "週"]
-        looks_like_time = any(word in text for word in time_words) or any(char.isdigit() for char in text)
-        if field != "name" or not looks_like_time:
-            draft[field] = text.strip("，。 ")
-
-    missing = missing_field(draft)
-    if missing:
-        return {"reply": FIELD_QUESTIONS[missing], "draft": draft, "missing": missing}
-
-    meeting = {
-        "id": len(meetings) + 1,
-        "name": draft["name"],
-        "time": draft["time"],
-        "location": draft["location"],
-        "created_at": datetime.now().strftime("%Y-%m-%d %H:%M"),
-    }
-    meetings.insert(0, meeting)
-    conversations[session_id] = {"name": None, "time": None, "location": None}
-    return {
-        "reply": f"✅ 已完成紀錄：{meeting['name']}｜{meeting['time']}｜{meeting['location']}",
-        "meeting": meeting,
-        "draft": {"name": None, "time": None, "location": None},
-    }
+def validate_csrf():
+    token = request.headers.get("X-CSRF-Token") or request.form.get("csrf_token", "")
+    if not token or not hmac.compare_digest(token, session.get("csrf_token", "")):
+        abort(403)
 
 
 @app.route("/")
@@ -140,58 +77,114 @@ def home():
 @app.route("/api/chat", methods=["POST"])
 def chat():
     data = request.get_json(silent=True) or {}
-    session_id = str(data.get("session_id", "default"))
-    text = str(data.get("message", "")).strip()
-    return jsonify(process_message(session_id, text))
-
-
-@app.route("/api/meetings")
-def get_meetings():
-    return jsonify(meetings)
+    user_id = str(data.get("session_id", "web-guest"))[:128]
+    message = str(data.get("message", "")).strip()
+    return jsonify({"reply": process_reservation_message(reservation_store, user_id, message)})
 
 
 @app.route("/callback", methods=["POST"])
 def callback():
     if line_handler is None:
-        return "LINE 尚未設定憑證或尚未安裝 line-bot-sdk", 503
+        return "LINE 尚未設定 Channel secret 或尚未安裝 line-bot-sdk", 503
 
     signature = request.headers.get("X-Line-Signature", "")
     body = request.get_data(as_text=True)
     try:
         payload = json.loads(body) if body else {}
     except json.JSONDecodeError:
-        payload = {}
+        abort(400)
     if not payload.get("events"):
         return "OK"
 
     try:
         line_handler.handle(body, signature)
     except InvalidSignatureError:
+        app.logger.warning("LINE webhook signature mismatch")
         abort(400)
     return "OK"
 
 
-if line_handler and TextMessageContent:
+if line_handler and MessageEvent and TextMessageContent:
     @line_handler.add(MessageEvent, message=TextMessageContent)
     def handle_line_message(event):
         if line_configuration is None:
             app.logger.error("LINE_CHANNEL_ACCESS_TOKEN 尚未設定")
             return
-        user_id = event.source.user_id or "line-user"
-        result = process_message(user_id, event.message.text)
-        reply_text = result["reply"]
-        if len(reply_text) > 5000:
-            reply_text = reply_text[:4995] + "..."
-
+        if not reservation_store.claim_webhook_event(getattr(event, "webhook_event_id", None)):
+            app.logger.info("Ignoring duplicate LINE webhook event")
+            return
+        user_id = (
+            getattr(event.source, "user_id", None)
+            or getattr(event.source, "group_id", None)
+            or getattr(event.source, "room_id", None)
+        )
+        if not user_id:
+            app.logger.warning("Ignoring LINE message without user, group, or room ID")
+            return
+        reply_text = process_reservation_message(reservation_store, user_id, event.message.text)
         with ApiClient(line_configuration) as api_client:
-            line_bot_api = MessagingApi(api_client)
-            line_bot_api.reply_message(
+            MessagingApi(api_client).reply_message(
                 ReplyMessageRequest(
                     reply_token=event.reply_token,
-                    messages=[TextMessage(text=reply_text)],
+                    messages=[TextMessage(text=reply_text[:5000])],
                 )
             )
 
 
+@app.route("/admin", methods=["GET"])
+def admin_page():
+    if not session.get("admin_logged_in"):
+        return render_template("admin_login.html")
+    if "csrf_token" not in session:
+        session["csrf_token"] = secrets.token_urlsafe(32)
+    return render_template("admin.html", csrf_token=session["csrf_token"])
+
+
+@app.route("/admin/login", methods=["POST"])
+def admin_login():
+    supplied_password = request.form.get("password", "")
+    if not admin_password:
+        return render_template(
+            "admin_login.html",
+            error="後台尚未設定密碼，請在本機 .env 設定 ADMIN_PASSWORD 後重新啟動。",
+        ), 503
+    if not hmac.compare_digest(supplied_password, admin_password):
+        return render_template("admin_login.html", error="密碼錯誤，請再試一次。"), 401
+    session.clear()
+    session["admin_logged_in"] = True
+    session["csrf_token"] = secrets.token_urlsafe(32)
+    return redirect(url_for("admin_page"))
+
+
+@app.route("/admin/logout", methods=["POST"])
+@admin_required
+def admin_logout():
+    validate_csrf()
+    session.clear()
+    return redirect(url_for("admin_page"))
+
+
+@app.route("/api/admin/month")
+@admin_required
+def admin_month():
+    month = request.args.get("month", "")
+    match = re.fullmatch(r"(\d{4})-(\d{2})", month)
+    if not match:
+        return jsonify({"error": "月份格式需為 YYYY-MM"}), 400
+    year, month_number = (int(value) for value in match.groups())
+    if not 1 <= month_number <= 12 or not 2000 <= year <= 2100:
+        return jsonify({"error": "月份超出有效範圍"}), 400
+    return jsonify(reservation_store.get_month(year, month_number))
+
+
+@app.route("/api/admin/reservations/<int:reservation_id>/cancel", methods=["POST"])
+@admin_required
+def admin_cancel_reservation(reservation_id):
+    validate_csrf()
+    if not reservation_store.cancel_admin_reservation(reservation_id):
+        return jsonify({"error": "找不到有效預約，可能已取消。"}), 404
+    return jsonify({"ok": True})
+
+
 if __name__ == "__main__":
-    app.run(debug=True, host="0.0.0.0", port=5000)
+    app.run(debug=False, host="0.0.0.0", port=5000)

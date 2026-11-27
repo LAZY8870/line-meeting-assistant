@@ -1,0 +1,162 @@
+@import url("https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Noto+Sans+TC:wght@400;500;600;700;800&display=swap");
+
+:root {
+    font-family: "DM Sans", "Noto Sans TC", sans-serif;
+    color: #242a24;
+    background: #f7f7f2;
+    font-synthesis: none;
+    --green: #2f684b;
+    --green-dark: #214e38;
+    --sage: #e8eee6;
+    --muted: #788078;
+    --border: #e6e8df;
+}
+
+* { box-sizing: border-box; }
+body { margin: 0; min-height: 100vh; background: #f7f7f2; }
+a { color: inherit; text-decoration: none; }
+button, input { font: inherit; }
+
+.landing { max-width: 1180px; margin: 0 auto; padding: 0 42px; }
+.topbar, .admin-topbar { height: 82px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border); }
+.wordmark { font-weight: 800; font-size: 19px; letter-spacing: .04em; }
+.wordmark span { margin-left: 5px; color: var(--green); font-size: 12px; font-weight: 600; }
+.admin-link, .admin-topbar .logout-button { color: #626c63; font-size: 13px; }
+.admin-link span { padding-left: 8px; color: var(--green); }
+
+.hero { min-height: 470px; display: grid; grid-template-columns: 1.05fr .95fr; align-items: center; gap: 40px; padding: 55px 0 45px; }
+.overline { margin: 0; color: var(--green); font-size: 10px; font-weight: 700; letter-spacing: .16em; }
+.hero-copy > .overline i { display: inline-block; width: 7px; height: 7px; margin-right: 7px; border-radius: 50%; background: #6b9b6b; }
+.hero h1 { margin: 19px 0 12px; font-size: clamp(42px, 5vw, 64px); line-height: 1.23; letter-spacing: -.06em; }
+.hero h1 em { color: var(--green); font-style: normal; }
+.hero-copy > p:not(.overline) { max-width: 470px; color: #6b736b; font-size: 14px; line-height: 1.9; }
+.hours-card { display: flex; align-items: center; gap: 15px; max-width: 440px; margin-top: 27px; padding: 16px 19px; border: 1px solid var(--border); border-radius: 12px; background: rgba(255,255,255,.7); }
+.hours-icon { width: 40px; height: 40px; display: grid; place-items: center; border-radius: 11px; background: var(--sage); color: var(--green); font-size: 24px; }
+.hours-card strong { font-size: 12px; }
+.hours-card p { margin: 5px 0 0; color: var(--muted); font-size: 11px; }
+.hours-card b { margin-right: 14px; color: #303a31; font-weight: 600; }
+.hours-card p span { margin-right: 7px; }
+.hero-copy .capacity-note { margin-top: 13px; font-size: 11px !important; }
+.capacity-note span { padding: 0 6px; color: #a7afa6; }
+
+.hero-art { position: relative; min-height: 370px; display: grid; place-items: center; overflow: hidden; border-radius: 48% 48% 18px 18px; background: #e9eee6; }
+.art-glow { position: absolute; width: 280px; height: 280px; border-radius: 50%; background: #d7e3d3; filter: blur(1px); }
+.table-illustration { position: relative; width: 220px; height: 220px; transform: rotate(-12deg); }
+.table-top { position: absolute; top: 50px; left: 44px; width: 132px; height: 132px; display: flex; align-items: center; justify-content: space-evenly; border: 10px solid #fffdf6; border-radius: 50%; background: #bc8e65; box-shadow: 0 18px 35px rgba(49,67,48,.15); }
+.table-top span { width: 33px; height: 33px; border: 4px solid rgba(255,255,255,.85); border-radius: 50%; }
+.chair { position: absolute; width: 46px; height: 37px; border: 6px solid #6c8c6b; border-radius: 13px; background: #e9eee6; }
+.chair-a { top: 15px; left: 86px; }.chair-b { right: 3px; top: 92px; transform: rotate(90deg); }.chair-c { bottom: 4px; left: 86px; }.chair-d { top: 92px; left: 3px; transform: rotate(90deg); }
+.plate { position: absolute; width: 44px; height: 44px; border: 3px solid #f8f2e7; border-radius: 50%; }
+.plate-one { top: 81px; left: 55px; }.plate-two { right: 55px; bottom: 52px; }
+.vase { position: absolute; top: 88px; left: 95px; z-index: 1; width: 30px; height: 40px; border-radius: 8px 8px 12px 12px; background: #75936e; }
+.vase i, .vase b, .vase span { position: absolute; bottom: 31px; left: 14px; width: 3px; height: 24px; border-radius: 5px; background: #547856; transform: rotate(-24deg); transform-origin: bottom; }
+.vase b { transform: rotate(24deg); }.vase span { transform: rotate(52deg); height: 20px; }
+.art-tag { position: absolute; padding: 9px 13px; border: 1px solid rgba(255,255,255,.8); border-radius: 9px; background: rgba(255,255,255,.86); box-shadow: 0 6px 16px rgba(45,64,43,.08); color: #5a6559; font-size: 10px; }
+.art-tag span { margin-right: 7px; color: var(--green); font-weight: 700; }
+.tag-one { top: 67px; left: 28px; }.tag-two { top: 137px; right: 18px; }.tag-three { bottom: 48px; left: 50px; }
+
+.steps { padding: 36px 0 48px; border-top: 1px solid var(--border); }
+.section-label { margin-bottom: 22px; color: #737c72; font-size: 11px; font-weight: 700; letter-spacing: .04em; }
+.section-label span { padding: 0 8px; color: #aab2a7; }
+.step-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+.step-grid article { min-height: 125px; padding: 18px 20px; border: 1px solid var(--border); border-radius: 12px; background: rgba(255,255,255,.55); }
+.step-number { color: var(--green); font-size: 10px; font-weight: 700; letter-spacing: .12em; }
+.step-grid h2 { margin: 10px 0 5px; font-size: 14px; }
+.step-grid p { margin: 0; color: var(--muted); font-size: 11px; line-height: 1.7; }
+.booking-rules { display: flex; flex-wrap: wrap; gap: 10px 28px; margin-top: 23px; }
+.booking-rules div { color: #697369; font-size: 11px; }
+.booking-rules b { margin-right: 5px; color: var(--green); }
+.landing footer, .admin-footer { display: flex; justify-content: space-between; padding: 18px 0; border-top: 1px solid var(--border); color: #858d84; font-size: 10px; }
+.landing footer a, .admin-footer a { color: var(--green); }
+
+.admin-body { min-height: 100vh; background: #f6f7f4; }
+.admin-shell { max-width: 1320px; margin: auto; padding: 0 42px; }
+.admin-topbar { height: 74px; }
+.admin-topbar form { margin: 0; }
+.logout-button { padding: 9px 15px; border: 1px solid var(--border); border-radius: 8px; background: #fff; cursor: pointer; }
+.admin-heading { display: flex; align-items: end; justify-content: space-between; gap: 20px; padding: 36px 0 24px; }
+.admin-heading h1 { margin: 8px 0 4px; font-size: 28px; }
+.admin-heading p:last-child { margin: 0; color: var(--muted); font-size: 12px; }
+.month-picker { display: flex; align-items: center; gap: 9px; }
+.month-picker button { width: 36px; height: 36px; border: 1px solid var(--border); border-radius: 8px; background: #fff; color: var(--green); cursor: pointer; }
+.month-picker input { height: 36px; padding: 0 10px; border: 1px solid var(--border); border-radius: 8px; background: #fff; }
+.stat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 18px; }
+.stat-card { display: grid; grid-template-columns: auto 1fr; align-items: center; column-gap: 12px; padding: 17px 19px; border: 1px solid var(--border); border-radius: 11px; background: #fff; }
+.stat-card span { grid-column: 1 / -1; color: var(--muted); font-size: 11px; }
+.stat-card strong { margin-top: 5px; color: #283a2d; font-size: 27px; }
+.stat-card small { margin-top: 12px; color: #929991; font-size: 10px; }
+.dashboard-grid { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(320px, .75fr); align-items: start; gap: 16px; }
+.calendar-card, .day-card { min-width: 0; padding: 19px; border: 1px solid var(--border); border-radius: 12px; background: #fff; }
+.calendar-header, .day-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 17px; }
+.calendar-header h2, .day-heading h2 { margin: 0; font-size: 15px; }
+.calendar-header span { color: #90978e; font-size: 10px; }
+.calendar-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 5px; }
+.weekday-row { margin-bottom: 7px; color: #899187; font-size: 10px; text-align: center; }
+.calendar-day { position: relative; min-height: 75px; padding: 7px; border: 1px solid #eff0ec; border-radius: 8px; background: #fff; text-align: left; cursor: pointer; }
+.calendar-day:hover { border-color: #9ab89c; background: #fafcf9; }
+.calendar-day.is-selected { border-color: var(--green); background: #f0f6ef; box-shadow: inset 0 0 0 1px var(--green); }
+.calendar-day.is-outside { background: #f8f9f7; color: #c4c9c1; }
+.calendar-day .day-number { font-size: 11px; font-weight: 600; }
+.calendar-day .day-metrics { display: block; margin-top: 8px; color: var(--green); font-size: 9px; line-height: 1.45; }
+.calendar-day .day-metrics b { display: block; font-size: 11px; }
+.calendar-day.is-outside .day-metrics { display: none; }
+.guest-pill { flex: 0 0 auto; padding: 6px 10px; border-radius: 20px; background: var(--sage); color: var(--green); font-size: 10px; }
+.day-heading .overline { margin-bottom: 5px; }
+.day-heading h2 { font-size: 14px; }
+.reservation-details { max-height: 510px; overflow: auto; }
+.reservation-item { padding: 13px 0; border-top: 1px solid #eff0ec; }
+.reservation-item:first-child { border-top: 0; }
+.reservation-item-head { display: flex; justify-content: space-between; gap: 8px; }
+.reservation-item-head strong { font-size: 12px; }
+.reservation-item-head span { color: var(--green); font-size: 11px; font-weight: 700; }
+.reservation-item p { margin: 5px 0; color: #757e74; font-size: 10px; line-height: 1.6; }
+.reservation-item .reservation-status { color: #a05249; }
+.cancel-booking { padding: 6px 9px; border: 1px solid #e8d8d5; border-radius: 7px; background: #fff; color: #99594e; font-size: 10px; cursor: pointer; }
+.cancel-booking:hover { background: #fbf3f1; }
+.empty-state { padding: 20px 4px; color: #959c93; font-size: 11px; text-align: center; }
+.form-error { margin: 11px 0; padding: 10px 12px; border-radius: 8px; background: #fcf0ed; color: #a34a3d; font-size: 12px; }
+.hidden { display: none !important; }
+
+.login-card { width: min(420px, calc(100% - 32px)); margin: 9vh auto; padding: 30px; border: 1px solid var(--border); border-radius: 15px; background: #fff; box-shadow: 0 18px 60px rgba(33,50,37,.08); }
+.back-link { color: #788078; font-size: 11px; }
+.login-icon { width: 42px; height: 42px; display: grid; place-items: center; margin-top: 30px; border-radius: 12px; background: var(--green); color: #fff; font-weight: 700; }
+.login-card .overline { margin-top: 23px; }
+.login-card h1 { margin: 7px 0; font-size: 25px; }
+.login-hint { margin: 0 0 22px; color: var(--muted); font-size: 12px; }
+.login-card form { display: grid; gap: 9px; }
+.login-card label { font-size: 11px; font-weight: 600; }
+.login-card input { height: 43px; padding: 0 12px; border: 1px solid #dfe3dd; border-radius: 8px; outline: none; }
+.login-card input:focus { border-color: #7e9d7c; }
+.login-card form button { display: flex; align-items: center; justify-content: space-between; height: 44px; margin-top: 7px; padding: 0 14px; border: 0; border-radius: 8px; background: var(--green); color: #fff; cursor: pointer; }
+.login-card form button:hover { background: var(--green-dark); }
+.login-card small { display: block; margin-top: 17px; color: #979d96; font-size: 10px; line-height: 1.6; }
+
+@media (max-width: 850px) {
+    .landing, .admin-shell { padding-right: 22px; padding-left: 22px; }
+    .hero { gap: 20px; }
+    .hero-art { min-height: 320px; }
+    .dashboard-grid { grid-template-columns: 1fr; }
+}
+@media (max-width: 600px) {
+    .landing, .admin-shell { padding-right: 16px; padding-left: 16px; }
+    .topbar { height: 65px; }
+    .hero { grid-template-columns: 1fr; gap: 20px; padding: 35px 0 28px; }
+    .hero h1 { font-size: 45px; }
+    .hero-art { min-height: 270px; border-radius: 35% 35% 16px 16px; }
+    .table-illustration { transform: scale(.85) rotate(-12deg); }
+    .step-grid { grid-template-columns: 1fr; gap: 9px; }
+    .step-grid article { min-height: 0; }
+    .booking-rules { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 6px; }
+    .admin-heading { display: grid; align-items: start; padding-top: 25px; }
+    .month-picker { justify-self: start; }
+    .stat-grid { gap: 7px; }
+    .stat-card { padding: 12px 9px; }
+    .stat-card strong { font-size: 22px; }
+    .stat-card small { font-size: 9px; }
+    .calendar-card, .day-card { padding: 12px; }
+    .calendar-grid { gap: 3px; }
+    .calendar-day { min-height: 61px; padding: 5px 3px; }
+    .calendar-day .day-metrics { margin-top: 6px; font-size: 8px; }
+    .calendar-day .day-metrics b { font-size: 9px; }
+    .landing footer, .admin-footer { gap: 10px; font-size: 9px; }
+}

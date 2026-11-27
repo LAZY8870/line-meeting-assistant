@@ -3,66 +3,58 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>會議小幫手</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <title>LINE 餐廳預約系統</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/reservation.css') }}">
 </head>
 <body>
-    <main class="app-shell">
-        <aside class="meeting-panel">
-            <div class="brand">
-                <div class="brand-mark">
-                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3C6.48 3 2 6.58 2 11c0 4.08 3.62 7.5 8.5 7.98.35.04.76.16.87.36.1.18.07.47.03.66l-.15.89c-.04.27-.21 1.06.93.58 1.14-.48 6.15-3.62 8.39-6.2A7.12 7.12 0 0 0 22 11c0-4.42-4.48-8-10-8Z"/></svg>
+    <main class="landing">
+        <nav class="topbar">
+            <a class="wordmark" href="/">好好食 <span>訂位</span></a>
+            <a class="admin-link" href="/admin">管理後台 <span aria-hidden="true">↗</span></a>
+        </nav>
+        <section class="hero">
+            <div class="hero-copy">
+                <span class="overline"><i></i> TABLES MADE SIMPLE</span>
+                <h1>好位子，<br><em>先幫你留好。</em></h1>
+                <p>LINE 傳訊息就能完成訂位。即時確認人數、日期與桌位，不用打電話等待。</p>
+                <div class="hours-card">
+                    <div class="hours-icon">◷</div>
+                    <div>
+                        <strong>每日營業時段</strong>
+                        <p>午餐 <b>11:30–14:30</b><span>晚餐</span><b>17:00–20:00</b></p>
+                    </div>
                 </div>
-                <div>
-                    <h1>會議小幫手</h1>
-                    <p><span class="online-dot"></span> 在線中</p>
-                </div>
+                <p class="capacity-note">6 張雙人桌 <span>·</span> 6 張四人桌 <span>·</span> 每組用餐 60 分鐘</p>
             </div>
-
-            <div class="draft-card">
-                <div class="draft-heading">
-                    <span>目前紀錄</span>
-                    <button id="resetBtn" type="button">重新開始</button>
+            <div class="hero-art" aria-label="餐廳預約說明">
+                <div class="art-glow"></div>
+                <div class="table-illustration">
+                    <div class="table-top"><span></span><span></span></div>
+                    <div class="chair chair-a"></div><div class="chair chair-b"></div>
+                    <div class="chair chair-c"></div><div class="chair chair-d"></div>
+                    <div class="plate plate-one"></div><div class="plate plate-two"></div>
+                    <div class="vase"><i></i><b></b><span></span></div>
                 </div>
-                <div class="draft-list">
-                    <div class="draft-item"><span>名稱</span><strong id="draftName">尚未填寫</strong></div>
-                    <div class="draft-item"><span>時間</span><strong id="draftTime">尚未填寫</strong></div>
-                    <div class="draft-item"><span>地點</span><strong id="draftLocation">尚未填寫</strong></div>
-                </div>
+                <div class="art-tag tag-one"><span>01</span> 選擇人數</div>
+                <div class="art-tag tag-two"><span>02</span> 挑選時段</div>
+                <div class="art-tag tag-three"><span>03</span> 訂位完成</div>
             </div>
-
-            <div class="history-heading"><span>已保存的會議</span><b id="meetingCount">0</b></div>
-            <div id="meetingList" class="meeting-list"></div>
-        </aside>
-
-        <section class="chat-panel">
-            <header class="chat-header">
-                <div>
-                    <p class="eyebrow">LINE 對話助理</p>
-                    <h2>紀錄會議資訊</h2>
-                </div>
-                <button class="more-btn" type="button" aria-label="更多選項">•••</button>
-            </header>
-
-            <div id="messages" class="messages" aria-live="polite">
-                <div class="message-row bot">
-                    <div class="avatar">助</div>
-                    <div class="bubble">你好！請告訴我會議名稱、時間與地點，三項資訊補齊後我會幫你保存。</div>
-                </div>
-            </div>
-
-            <form id="chatForm" class="composer">
-                <button class="add-btn" type="button" aria-label="更多功能">＋</button>
-                <input id="messageInput" type="text" autocomplete="off" placeholder="輸入會議名稱、時間或地點…" aria-label="訊息">
-                <button class="send-btn" type="submit" aria-label="送出">
-                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 20.5 21 12 3.5 3.5l.01 6.51L16 12l-12.49 1.99z"/></svg>
-                </button>
-            </form>
         </section>
+        <section class="steps">
+            <div class="section-label">HOW TO BOOK <span>—</span> 三步驟，輕鬆訂位</div>
+            <div class="step-grid">
+                <article><span class="step-number">01</span><h2>加入 LINE 好友</h2><p>打開官方帳號對話，傳送「預約」開始。</p></article>
+                <article><span class="step-number">02</span><h2>告訴我們需求</h2><p>依序選擇人數、日期、可預約時段，留下姓名。</p></article>
+                <article><span class="step-number">03</span><h2>收到訂位確認</h2><p>機器人確認可用桌位後，立即回覆訂位編號。</p></article>
+            </div>
+            <div class="booking-rules">
+                <div><b>✓</b> 僅開放 90 天內預約</div>
+                <div><b>✓</b> 時段額滿會即時提示</div>
+                <div><b>✓</b> 可查詢或取消自己的預約</div>
+                <div><b>✓</b> 桌位不足不會超額接單</div>
+            </div>
+        </section>
+        <footer><span>好好食・把每一餐都留給好時光</span><a href="/admin">後台管理 →</a></footer>
     </main>
-    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
 </body>
 </html>

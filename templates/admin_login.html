@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>管理員登入｜好好食訂位</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/reservation.css') }}">
+</head>
+<body class="admin-body">
+    <main class="login-card">
+        <a class="back-link" href="/">← 回到首頁</a>
+        <div class="login-icon">H</div>
+        <p class="overline">RESTAURANT ADMIN</p>
+        <h1>管理後台</h1>
+        <p class="login-hint">登入後查看每月訂位與每日來客人數。</p>
+        {% if error %}<div class="form-error" role="alert">{{ error }}</div>{% endif %}
+        <form action="/admin/login" method="post">
+            <label for="password">管理員密碼</label>
+            <input id="password" name="password" type="password" autocomplete="current-password" required>
+            <button type="submit">登入後台 <span>→</span></button>
+        </form>
+        <small>密碼保存在本機專案的 .env，不會上傳至 GitHub。</small>
+    </main>
+</body>
+</html>
